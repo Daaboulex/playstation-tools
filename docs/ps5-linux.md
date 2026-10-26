@@ -183,15 +183,29 @@ an initrd the loader takes as it is.
 
 1. **Kernel**: `linux.patch` and the project's `.config` vendored into the repo at a pinned
    patches tag (reading a fetched `.config` at evaluation would be import-from-derivation, which
-   pure flake evaluation avoids). `IKCONFIG` is worth switching on. Measured on 2026-10-26 with
-   `patch --dry-run` on the files the patch touches: against nixpkgs' 7.2.12 two hunks fail even
-   with fuzz, `btusb.c` (new upstream flags next to the patch's) and one in `amdgpu_dm.c`
-   (display init moved), a small rebase; against 7.3, the base of CachyOS "latest" as
-   xddxdd/nix-cachyos-kernel packaged it on 2026-10-26 (7.3.0, LTS 6.18.55), 16 hunks fail in
-   8 files, 8 of them in `amdgpu_dm.c`, a real rebase of the display hotplug code. The patches repository tags one rebase per kernel
-   (`kernel-7.2.3-1ec6a4a` and older). So: first the exact 7.2.3 pair, then 7.2.12 with the two
-   hunks rebased, LTO and `-march=znver2` (the PS5's Zen 2 is x86-64-v3, not v4) on top, and
-   the CachyOS kernel once the patches repository publishes a 7.3 rebase.
+   pure flake evaluation avoids). The project builds it with GCC 15.2, no LTO, generic x86-64,
+   and `IOMMU_DEFAULT_PASSTHROUGH`; `IKCONFIG` is off and worth switching on. Measured on
+   2026-10-26 with `patch --dry-run` (newest patches tag that day: `kernel-7.2.3-1ec6a4a`):
+   - nixpkgs' 7.2.12: two hunks fail even with fuzz, `btusb.c` (new upstream flags next to the
+     patch's) and one in `amdgpu_dm.c` (display init moved), a small rebase.
+   - vanilla 7.3: 16 hunks fail in 8 files, 8 of them in `amdgpu_dm.c`, a real rebase of the
+     display hotplug code.
+   - CachyOS `cachyos-7.3.0-4` (the source xddxdd/nix-cachyos-kernel built "latest" from that
+     day; LTS was 6.18.55): 15 hunks fail in 7 files (`amdgpu_dm.c` 8, `btusb.c` 2, and one each
+     in `amdgpu.h`, `amdgpu_drv.c`, `iommu/amd/init.c`, `asm/setup.h`, `kvm/x86.c`). CachyOS's
+     own changes add no conflict; the failures are the 7.2 to 7.3 drift. The BORE scheduler
+     patch shares no file with `linux.patch`.
+   - CachyOS's `config` has `X86_EXTENDED_PLATFORM` off, which `X86_PS5` depends on, and lacks
+     `AHCI_SALINA`, `MTS` and the built-in `ps5_vcn.bin`; those go in the patch's
+     `structuredExtraConfig`. Its builder sets `ignoreConfigErrors`, so a check must assert
+     `CONFIG_X86_PS5=y` in the built kernel's config, or a dropped option goes unnoticed.
+
+   NixOS's `boot.kernelPatches` reaches any `boot.kernelPackages`, the CachyOS builder
+   included, so the PS5 patch and its config are one list entry whatever kernel the host
+   picks. So: first the exact 7.2.3 pair, then 7.2.12 with the two hunks rebased, and CachyOS
+   LTO at `x86-64-v3` (the PS5's Zen 2 has AVX2 and no AVX-512; never `native` or `zen4` when
+   ryzen builds it) once a patch applies to its source: upstream's 7.3 tag or our own rebase of
+   the 15 hunks.
 2. **Firmware**: `ps5_vcn.bin` stays built in; `hardware.firmware` with linux-firmware for the
    rest, and anything a built-in driver requests at probe goes in the initramfs, because a
    built-in driver probes before the root filesystem is mounted.
