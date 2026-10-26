@@ -24,7 +24,7 @@ check. The README says what each command does and which environment variables co
   here.
 - Commits: `type(scope): summary`, 72 characters at most, lowercase after the prefix, a body
   that says why and what was discarded, a `Test:` line naming what ran, and a `Cause:` line on
-  a fix. One logical change per commit. Scopes: pst, check, flake, readme, docs, overlays.
+  a fix. One logical change per commit. Scopes: pst, check, module, flake, readme, docs, overlays.
 
 ## Commands by what they touch
 
@@ -67,6 +67,9 @@ command table, and a row in `docs/console-apis.md` for any new endpoint. New sta
   status and payloads, game folders, PS4 fPKG, Y2JB, avatars, console saves, save formats, CLI.
 - `check.py` and `fixtures/` (synthetic or scrubbed files only); `fixtures/playgo-trigger.nix`
   is the pkgtool patch's heal test.
+- `module.nix` is the NixOS module for Linux on the PS5; `kernel.nix` builds the kernel.org
+  release the patch set's `.config` names, with the tarball hash from `kernel.json`, which
+  `nix run .#after-lock-update` (`scripts/sync-kernel-pin.sh`) writes.
 - `package.nix` builds `pst`; `overlay.nix` adds it to nixpkgs; `overlays/` holds temporary
   fixes to nixpkgs packages in the standard's shape (a reason, a date, and the build that shows
   the fix is no longer needed); `patches/` holds the patch files they apply.

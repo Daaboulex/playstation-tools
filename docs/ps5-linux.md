@@ -181,10 +181,13 @@ of kstuff-lite, then warm reboots by kexec while Linux runs.
 The PS5 is simpler than the PS4 Linux ports in three places: a mainline kernel, stock mesa, and
 an initrd the loader takes as it is.
 
-1. **Kernel**: `linux.patch` and the project's `.config` vendored into the repo at a pinned
-   patches tag (reading a fetched `.config` at evaluation would be import-from-derivation, which
-   pure flake evaluation avoids). The project builds it with GCC 15.2, no LTO, generic x86-64,
-   and `IOMMU_DEFAULT_PASSTHROUGH`; `IKCONFIG` is off and worth switching on. Measured on
+1. **Kernel**: done as this repository's NixOS module (`module.nix`, options in the README).
+   It takes `linux.patch` and `firmware/` from upstream's main branch as a flake input; reading
+   that input's `.config` for the target version is not import-from-derivation, because flake
+   inputs are fetched before evaluation. The config is nixpkgs' kernel config plus the PS5
+   options, the way nixpkgs and nixos-apple-silicon build device kernels, not the project's
+   `.config`. The project builds its own kernel with GCC 15.2, no LTO, generic x86-64, and
+   `IOMMU_DEFAULT_PASSTHROUGH`; `IKCONFIG` is off there and on in nixpkgs' config. Measured on
    2026-10-26 with `patch --dry-run` (newest patches tag that day: `kernel-7.2.3-1ec6a4a`):
    - nixpkgs' 7.2.12: two hunks fail even with fuzz, `btusb.c` (new upstream flags next to the
      patch's) and one in `amdgpu_dm.c` (display init moved), a small rebase.

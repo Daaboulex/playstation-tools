@@ -119,11 +119,28 @@
         "type": "github"
       }
     },
+    "ps5-linux-patches": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792908572,
+        "narHash": "sha256-ReJy9k+33vG0O2MRO41C6eMwjUsUZRcjHJj69jzYRx0=",
+        "owner": "ps5-linux",
+        "repo": "ps5-linux-patches",
+        "rev": "1ec6a4a7e0611c322ea75fcf63284cc5e3dc6f6b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ps5-linux",
+        "repo": "ps5-linux-patches",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
         "git-hooks": "git-hooks",
         "nixpkgs": "nixpkgs",
+        "ps5-linux-patches": "ps5-linux-patches",
         "std": "std"
       }
     },

@@ -46,6 +46,31 @@ and `curl`.
 | `PST_STATE` | where saves, backups, built packages and snapshots go; default `$XDG_STATE_HOME/pst`, else `~/.local/state/pst` |
 | `GITHUB_TOKEN` | optional; raises the GitHub API rate limit; sent only to api.github.com |
 
+## NixOS module
+
+`nixosModules.default` puts the PS5 Linux patch set
+([ps5-linux-patches](https://github.com/ps5-linux/ps5-linux-patches)) onto a kernel, for a NixOS
+that runs on the PS5 itself:
+
+```nix
+{
+  imports = [ inputs.playstation-tools.nixosModules.default ];
+  ps5-linux.kernel.enable = true;
+}
+```
+
+`ps5-linux.kernel.enable` adds the patch set to `boot.kernelPatches` with `X86_PS5`, the Salina
+AHCI and MTS Ethernet drivers, IOMMU passthrough and the built-in `amdgpu/ps5_vcn.bin`, and
+sets `boot.kernelPackages` by default to the kernel.org release the patch set targets. A
+configuration that sets `boot.kernelPackages` itself, such as to a CachyOS kernel, gets the
+patch set on that kernel instead; it builds once the patch set applies to that kernel's source.
+
+Every system build reads the generated kernel config and fails if one of those options is
+missing. The patch set follows upstream's main branch: the scheduled lock refresh moves it,
+`nix run .#after-lock-update` writes the hash of the release it targets into `kernel.json`, and CI generates
+that kernel's config before the refresh lands. Boot files, fan and boost, and Wi-Fi are not in
+the module yet; see [docs/ps5-linux.md](docs/ps5-linux.md).
+
 ## Commands
 
 | Command | Does |
