@@ -1,0 +1,29 @@
+{
+  "package": "playstation-tools",
+  "upstream": {
+    "type": "none",
+    "owner": "Daaboulex",
+    "repo": "playstation-tools"
+  },
+  "packageFile": "flake.nix",
+  "hashes": [],
+  "verify": {
+    "binary": null,
+    "args": null,
+    "check": "wrapper"
+  },
+  "description": "pst - command-line tool for jailbroken PS4 and PS5 consoles: status, payloads, game dumps, fake packages and saves",
+  "topics": [
+    "nix",
+    "nixos",
+    "flake",
+    "ps4",
+    "ps5",
+    "playstation",
+    "jailbreak",
+    "homebrew",
+    "fpkg",
+    "python",
+    "cli"
+  ]
+}

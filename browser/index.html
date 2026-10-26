@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser</title>
+<style>
+body { margin: 0; background: #0b0e14; color: #e6e6e6; font-family: sans-serif; }
+main { max-width: 1100px; margin: 12vh auto 0; padding: 0 24px; }
+form { display: flex; gap: 16px; }
+input { flex: 1; font-size: 32px; padding: 18px 22px; border-radius: 12px; border: 2px solid #3a4150; background: #151a23; color: #fff; }
+input:focus, button:focus, a:focus { outline: 4px solid #4c8dff; }
+button, a { font-size: 30px; padding: 18px 28px; border-radius: 12px; border: 0; background: #2f6fed; color: #fff; text-decoration: none; }
+nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 40px; }
+nav a { background: #1f2633; }
+</style>
+</head>
+<body>
+<main>
+<form id="go">
+<input id="address" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type an address or a search" autofocus>
+<button type="submit">Go</button>
+</form>
+<nav>
+<a href="https://html.duckduckgo.com/html/">DuckDuckGo</a>
+</nav>
+</main>
+<script>
+document.getElementById("go").addEventListener("submit", function (event) {
+  event.preventDefault();
+  var text = document.getElementById("address").value.trim();
+  if (!text) { return; }
+  if (/^https?:\/\//i.test(text)) {
+    location.href = text;
+  } else if (!/\s/.test(text) && /^[^\/]+\.[a-z]{2,}(\/.*)?$/i.test(text)) {
+    location.href = "https://" + text;
+  } else {
+    location.href = "https://html.duckduckgo.com/html/?q=" + encodeURIComponent(text);
+  }
+});
+</script>
+</body>
+</html>

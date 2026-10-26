@@ -1,0 +1,11 @@
+{
+  "applicationCategoryType": 65536,
+  "titleId": "FAKE00002",
+  "deeplinkUri": "http://127.0.0.1:8080/fs/data/pst/browser/index.html",
+  "localizedParameters": {
+    "defaultLanguage": "en-US",
+    "en-US": {
+      "titleName": "Browser"
+    }
+  }
+}
