@@ -75,11 +75,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1792773339,
-        "narHash": "sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw=",
+        "lastModified": 1793341285,
+        "narHash": "sha256-Y1CiZ4SoBUjLQyQM/pY+rS2dXD3CHLPstF0lmOc73D4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3ec636362e1816bc2f0888fa0fa2c69f1bc9e504",
+        "rev": "1c89083e451e891152365b799595cf7790a43325",
         "type": "github"
       },
       "original": {
@@ -122,11 +122,11 @@
     "ps5-linux-patches": {
       "flake": false,
       "locked": {
-        "lastModified": 1792908572,
-        "narHash": "sha256-ReJy9k+33vG0O2MRO41C6eMwjUsUZRcjHJj69jzYRx0=",
+        "lastModified": 1793345219,
+        "narHash": "sha256-pRMvpXhEGt+ovuzvTXENahUq5B10AwLXjvUnnYr8wi0=",
         "owner": "ps5-linux",
         "repo": "ps5-linux-patches",
-        "rev": "1ec6a4a7e0611c322ea75fcf63284cc5e3dc6f6b",
+        "rev": "22c80a1cef414fcee59d308f09a634d43349a651",
         "type": "github"
       },
       "original": {
