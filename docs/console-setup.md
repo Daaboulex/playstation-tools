@@ -16,7 +16,6 @@ other one, after checking GitHub's sha256.
 | kstuff-lite | yes | running fake-signed games and apps |
 | ShadowMountPlus | yes | registering and mounting games and apps from `/data/homebrew`, USB and exFAT images |
 | ftpsrv | yes | FTP on 2121, which every upload uses |
-| websrv | yes | the Browser tile's start page on 8080, and websrv homebrew |
 | PS5 App Dumper | no, `pst dumper` | dumping games and fake-signing folders (`pst fself`) |
 | Garlic SaveMgr | no, started by the `save-` commands | decrypting and re-encrypting saves; web UI and API on 8082 |
 | klogsrv | no | system log on 3232 for diagnosing crashes |
@@ -31,17 +30,6 @@ etaHEN and kstuff must not run for a PS5 Linux boot (see [ps5-linux.md](ps5-linu
 fallback, as plain DNS, and answers PlayStation Network domains with 0.0.0.0, keeping drakmor's
 default exceptions. nanoDNS listens on 127.0.0.1; with the PS5's network DNS set to 127.0.0.1
 the console has no DNS until nanoDNS runs, which keeps it off PSN before a jailbreak.
-
-## Browser start page
-
-`browser/index.html` is an address box with links for the PS5's built-in browser, kept on the
-console at `/data/pst/browser/index.html` and served by websrv on 8080. `browser/tile/` is a
-media-app tile (`FAKE00002`) whose `param.json` opens that page; it is uploaded over FTP to
-`/data/homebrew/FAKE00002` (`pst send` takes only `PPSA` and `CUSA` title IDs). Its `eboot.bin`
-is an empty placeholder because ShadowMountPlus
-only registers folders that have one. websrv recreates its own "Homebrew Launcher" tile at start
-unless `/user/app/FAKE00000/param.json` exists, so an empty `{}` file there keeps that tile
-deleted.
 
 ## Temperatures and clocks
 

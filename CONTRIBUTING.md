@@ -73,5 +73,5 @@ command table, and a row in `docs/console-apis.md` for any new endpoint. New sta
   fixes to nixpkgs packages in the standard's shape (a reason, a date, and the build that shows
   the fix is no longer needed); `patches/` holds the patch files they apply.
 - `docs/`: console facts and formats, each with how and when it was established.
-- `browser/`, `dns/`: files that go onto the console as they are.
+- `dns/`: a file that goes onto the console as it is.
 - Console state, saves and backups live in `PST_STATE`, never in the repository.

@@ -103,7 +103,7 @@ name and rename into place, and refuse when the state is not what they expect.
 ## Documentation
 
 - [docs/console-apis.md](docs/console-apis.md): services, ports and endpoints
-- [docs/console-setup.md](docs/console-setup.md): payloads, DNS, the Browser tile, temperatures
+- [docs/console-setup.md](docs/console-setup.md): payloads, DNS, temperatures
 - [docs/game-folders.md](docs/game-folders.md): dumps, case-sensitive storage, compressed games
 - [docs/fpkg.md](docs/fpkg.md): PS4 fake packages and the pkgtool patch
 - [docs/saves.md](docs/saves.md): save commands and per-game formats

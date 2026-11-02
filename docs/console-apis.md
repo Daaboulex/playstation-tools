@@ -12,7 +12,6 @@ in `pst.py` (`PM_PORT`, `DUMPER_PORT`, `GARLIC_PORT`, `FILE_MANAGER_PORT`, `SHSR
 | Garlic SaveMgr | 8082 | none | the `save-` commands |
 | ps5-web-file-manager | 8888 | none | `pst y2jb --pkg` |
 | shsrv | 2323 | none | `pst temps`; `pst temps --stop` ends it |
-| websrv | 8080 | none | the autoload list |
 | ShadowMountPlus | 10101 | none | the autoload list |
 | elfldr | 9021 | none | Y2JB; itsPLK's build accepts connections from the console itself only |
 | GoldHEN FTP (PS4) | 2121 | anonymous | GoldHEN |
