@@ -19,9 +19,10 @@ check. The README says what each command does and which environment variables co
   reaches the user as one `pst: ...` line.
 - `check.py` never touches a console or the network: stub the transport, as `FakeFtp` does.
 - The repository follows github:Daaboulex/nix-packaging-standard: its lint (ruff, nixfmt, typos,
-  rumdl and more) runs in the pre-commit hook and in the flake check. The synced files
-  (`.envrc`, `.editorconfig`, `.github/workflows/`) are copied from the standard, never edited
-  here.
+  rumdl and more) runs in the pre-commit hook. `nix flake check` and `nix fmt` do not run ruff:
+  on 2026-11-02 unformatted Python passed both and the hook reformatted it at commit. The
+  synced files (`.envrc`, `.editorconfig`, `.github/workflows/`) are copied from the standard,
+  never edited here.
 - Commits: `type(scope): summary`, 72 characters at most, lowercase after the prefix, a body
   that says why and what was discarded, a `Test:` line naming what ran, and a `Cause:` line on
   a fix. One logical change per commit. Scopes: pst, check, module, flake, readme, docs, overlays.
