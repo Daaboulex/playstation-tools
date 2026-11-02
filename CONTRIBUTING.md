@@ -50,9 +50,8 @@ runs one.
 - Never overwrite a console file in place: upload under a temporary name or folder, check the
   size, then rename (`ftp_store`, `ftp_replace`, the staging in `cmd_send`).
 - No download without a GitHub sha256 digest (`verified_download`).
-- Never fake-activate an account, never update a console past 13.60 (14.00 and later block the
-  exploits), and stop what you started (`pst temps --stop`): shsrv, Garlic and FTP have no
-  login.
+- Never update a console past 13.60 (14.00 and later block the exploits), and stop what you
+  started (`pst temps --stop`): shsrv, Garlic and FTP have no login.
 
 ## Adding a command
 
