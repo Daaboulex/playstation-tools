@@ -77,7 +77,7 @@ the module yet; see [docs/ps5-linux.md](docs/ps5-linux.md).
 |---|---|
 | `pst status` | Running payloads, autoload list, installed payloads, games, storage |
 | `pst payloads` | Each installed payload against its developer's newest GitHub release |
-| `pst payload-update <name>` | Installs the developer's newest release after checking GitHub's sha256 |
+| `pst payload-update <name>` | Installs the developer's newest release after checking GitHub's sha256; Payload Manager updates its own repository's payloads |
 | `pst snapshot` | Records console state and developer versions to `$PST_STATE/inventory/<date>.json` |
 | `pst dumper` | Starts the App Dumper |
 | `pst temps [--watch N] [--count N] [--stop]` | SoC and CPU temperature and CPU clock from shsrv's banner; `--stop` ends shsrv |

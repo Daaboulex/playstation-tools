@@ -312,11 +312,34 @@ def pm(path, **kwargs):
     return http_json(f"http://{host()}:{PM_PORT:d}{path}", **kwargs)
 
 
-def load_payload(folder):
-    paths = [path for path in pm("/list_payloads")["payloads"] if f"/{folder}/" in path]
+def pm_post(path, data=b"", headers=None):
+    return http(
+        f"http://{host()}:{PM_PORT:d}{path}",
+        data=data,
+        headers={**(headers or {}), "X-PLDMGR-Request": "1"},
+    )
+
+
+def pm_items():
+    items = pm("/list_payloads").get("items")
+    if not isinstance(items, list):
+        raise Fail(
+            "Payload Manager sent no items list; pst needs Payload Manager 0.6.3 or newer"
+        )
+    return items
+
+
+def payload_key(item):
+    return item.get("id") or posixpath.basename(item["slot"])
+
+
+def load_payload(key):
+    paths = [item["path"] for item in pm_items() if payload_key(item) == key]
     if len(paths) != 1:
-        raise Fail(f"expected one {folder} payload, found {len(paths):d}")
-    http(f"http://{host()}:{PM_PORT:d}/loadpayload:{paths[0]}")
+        raise Fail(
+            f"expected one {key} payload in Payload Manager, found {len(paths):d}"
+        )
+    pm_post("/loadpayload:" + urllib.parse.quote(paths[0], safe="/@"))
     return paths[0]
 
 
@@ -338,10 +361,10 @@ def answers(request, path):
     return True
 
 
-def start_payload(folder, running, name, port):
+def start_payload(key, running, name, port):
     if running():
         return
-    load_payload(folder)
+    load_payload(key)
     for _attempt in range(30):
         time.sleep(1)
         if running():
@@ -405,17 +428,26 @@ def shsrv_running():
     return True
 
 
-def stop_shsrv():
-    pids = [
+def shsrv_pids():
+    return [
         item["pid"]
         for item in pm("/processes_list")["processes"]
         if item["name"] == "shsrv.elf"
     ]
+
+
+def stop_shsrv():
+    pids = shsrv_pids()
     if len(pids) != 1:
         raise Fail(f"expected one shsrv.elf process, found {len(pids):d}")
-    reply = pm(f"/process_kill?pid={pids[0]:d}")
-    if not reply.get("ok"):
-        raise Fail(f"Payload Manager could not stop shsrv: {reply!r}")
+    pm_post(f"/process_kill?pid={pids[0]:d}")
+    for _attempt in range(10):
+        if pids[0] not in shsrv_pids():
+            return
+        time.sleep(0.5)
+    raise Fail(
+        f"Payload Manager accepted the stop, but shsrv (pid {pids[0]:d}) still runs"
+    )
 
 
 def mirror_entries():
@@ -477,26 +509,27 @@ def verified_download(asset):
     return data
 
 
-def installed_payloads():
-    listing = pm("/list_payloads")
-    mirror = mirror_entries()
+def local_version(key, filename):
+    stem = posixpath.splitext(filename)[0]
+    prefix = key.lower() + "_"
+    return stem[len(prefix) :] if stem.lower().startswith(prefix) else ""
+
+
+def installed_payloads(items, mirror):
     result = []
-    for path in listing["payloads"]:
-        filename = posixpath.basename(path)
-        meta = listing.get("meta", {}).get(filename, {})
-        name = meta.get("display_name") or ""
-        if not name or name.endswith((".elf", ".bin")):
-            name = posixpath.basename(posixpath.dirname(path))
-        stem = posixpath.splitext(filename)[0]
-        version = meta.get("version") or stem[len(name) + 1 :]
-        source = repo_of(meta.get("source")) or repo_of(
+    for item in items:
+        key = payload_key(item)
+        name = item.get("name") or key
+        source = repo_of(item.get("source")) or repo_of(
             mirror.get(name, {}).get("source")
         )
         result.append(
             {
                 "name": name,
-                "file": filename,
-                "version": version,
+                "key": key,
+                "kind": item.get("kind", ""),
+                "file": item["filename"],
+                "version": item.get("version") or local_version(key, item["filename"]),
                 "source": "https://github.com/" + source if source else "",
             }
         )
@@ -514,7 +547,7 @@ def collect_status():
             for item in pm("/processes_list")["processes"]
             if item["is_daemon"]
         ),
-        "payloads": installed_payloads(),
+        "payloads": installed_payloads(pm_items(), mirror_entries()),
         "homebrew": [name for name in ftp_dirs(HOMEBREW) if name != "ps5-app-dumper"],
         "library": None,
         "storage": [],
@@ -552,23 +585,46 @@ def payload_current(installed, tag):
 
 
 def cmd_payloads(_args):
-    for item in installed_payloads():
+    for item in installed_payloads(pm_items(), mirror_entries()):
         repo = repo_of(item["source"])
         if not repo:
             print(f"{item['name']!s:<30} {item['version']!s:<16} source unknown")
             continue
         latest = github_latest(repo)
-        mark = (
-            "current"
-            if payload_current(item["version"], latest["tag_name"])
-            else "UPDATE"
-        )
+        if payload_current(item["version"], latest["tag_name"]):
+            mark = "current"
+        elif item["kind"] == "repo":
+            mark = "UPDATE in Payload Manager"
+        else:
+            mark = "UPDATE: pst payload-update " + item["key"]
         print(
             f"{item['name']!s:<30} {item['version'] or '?'!s:<16} latest {latest['tag_name']!s:<16} {mark}{(' (pre-release)' if latest['prerelease'] else '')}"
         )
 
 
+def repository_holds(items, name):
+    wanted = name.lower()
+    return any(
+        item.get("kind") == "repo"
+        and wanted in (payload_key(item).lower(), (item.get("name") or "").lower())
+        for item in items
+    )
+
+
+def upload_mode(check):
+    if check.get("status") != "ok":
+        raise Fail(f"Payload Manager refused the upload check: {check!r}")
+    existing = (
+        check.get("existing") or check.get("file_exists") or check.get("folder_exists")
+    )
+    return "replace" if existing else "new"
+
+
 def cmd_payload_update(args):
+    if repository_holds(pm_items(), args.name):
+        raise Fail(
+            f"{args.name} comes from Payload Manager's repository; update it in Payload Manager"
+        )
     entry = mirror_entries().get(args.name)
     if not entry:
         raise Fail(f"unknown payload {args.name!r}; see: pst payloads")
@@ -578,16 +634,21 @@ def cmd_payload_update(args):
     data = verified_download(asset)
     extension = posixpath.splitext(asset["name"])[1]
     filename = f"{args.name}_{release['tag_name']}{extension}"
-    query = urllib.parse.urlencode({"filename": filename})
-    reply = http(
-        f"http://{host()}:{PM_PORT:d}/manage:upload?{query}",
+    check = pm(
+        "/manage:check?" + urllib.parse.urlencode({"filename": filename}),
+        headers={"X-PLDMGR-Request": "1"},
+    )
+    mode = upload_mode(check)
+    reply = pm_post(
+        "/manage:upload?"
+        + urllib.parse.urlencode({"filename": filename, "mode": mode}),
         data=data,
         headers={"Content-Type": "application/octet-stream"},
     )
     if reply.strip() != b"OK":
         raise Fail(f"upload refused: {reply!r}")
     print(
-        f"installed {filename} ({repo}, sha256 verified){(' pre-release' if release['prerelease'] else '')}"
+        f"installed {filename} ({repo}, sha256 verified, {mode}){(' pre-release' if release['prerelease'] else '')}"
     )
 
 

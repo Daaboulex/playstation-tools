@@ -5,8 +5,9 @@ How the PS5 side `pst` works with is set up, with the facts measured on a CFI-11
 ## Payloads
 
 What each payload in Payload Manager is for. `pst payloads` compares each installed one with its
-developer's newest GitHub release; `pst payload-update <name>` installs that release after
-checking GitHub's sha256.
+developer's newest GitHub release. Payload Manager updates the payloads it added from its own
+repository; `pst payload-update <name>` refuses those and installs the newest release of any
+other one, after checking GitHub's sha256.
 
 | Payload | Starts at boot | Needed for |
 |---|---|---|

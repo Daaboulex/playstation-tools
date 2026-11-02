@@ -19,10 +19,18 @@ in `pst.py` (`PM_PORT`, `DUMPER_PORT`, `GARLIC_PORT`, `FILE_MANAGER_PORT`, `SHSR
 
 ## Payload Manager, port 8084
 
-- `/version`, `/get_config`, `/sources_list`, `/list_payloads` (with a `meta` map per file)
-- `/processes_list`, `/process_kill?pid=`
-- `/loadpayload:<path>` starts a payload from its folder under `/data/pldmgr/payloads/`
-- `/manage:upload?filename=` with the ELF as the POST body installs a payload
+Read from version 0.6.3 on 2026-11-02, and from the requests its own web page sends.
+
+- `/version`, `/get_config`, `/sources_list`, `/processes_list`, `/manage:check?filename=`
+- `/list_payloads`: an `items` list with `slot`, `path`, `kind` (`repo` or `local`) and
+  `filename`; a repository payload adds `id`, `name`, `version` and `source`
+- Every call that changes something is a POST with the header `X-PLDMGR-Request: 1`; without
+  it the answer is 403 or 405:
+  - `/loadpayload:<path>` starts a payload from its folder under `/data/pldmgr/payloads/`
+  - `/process_kill?pid=`
+  - `/manage:upload?filename=&mode=` with the ELF as the body; `mode` is `new`, `replace` or
+    `keep_both`. Payload Manager files an upload under the lowercase name before the first `_`,
+    which `/manage:check` reports, and keeps local uploads apart from its repository's payloads
 
 ## PS5 App Dumper, port 8081
 

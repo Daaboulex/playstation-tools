@@ -655,6 +655,7 @@ def main():
     assert pst.dumper_running() is False
     assert pst.garlic_running() is False
     check_uploads()
+    check_payload_manager()
     print("check: ok")
     return 0
 
@@ -758,6 +759,96 @@ def check_uploads():
 
         pst.ftp = refused
         assert pst.main(["send", dump]) == 1
+
+
+def check_payload_manager():
+    items = [
+        {
+            "slot": "repo/webkit-autoloader-installer@e8cce5d1",
+            "path": "/data/pldmgr/payloads/repo/webkit-autoloader-installer@e8cce5d1/"
+            "WebKit-Autoloader-Installer_v0.6.2.elf",
+            "kind": "repo",
+            "filename": "WebKit-Autoloader-Installer_v0.6.2.elf",
+            "id": "webkit-autoloader-installer",
+            "name": "WebKit-Autoloader-Installer",
+            "version": "v0.6.2",
+            "source": "https://github.com/itsPLK/ps5-webkit-autoloader/releases",
+        },
+        {
+            "slot": "local/shsrv",
+            "path": "/data/pldmgr/payloads/local/shsrv/shsrv_v0.20.elf",
+            "kind": "local",
+            "filename": "shsrv_v0.20.elf",
+        },
+        {
+            "slot": "local/prosperomgr",
+            "path": "/data/pldmgr/payloads/local/prosperomgr/ProsperoMgr.elf",
+            "kind": "local",
+            "filename": "ProsperoMgr.elf",
+        },
+    ]
+    mirror = {"shsrv": {"source": "https://github.com/someone/shsrv"}}
+    assert pst.installed_payloads(items, mirror) == [
+        {
+            "name": "WebKit-Autoloader-Installer",
+            "key": "webkit-autoloader-installer",
+            "kind": "repo",
+            "file": "WebKit-Autoloader-Installer_v0.6.2.elf",
+            "version": "v0.6.2",
+            "source": "https://github.com/itsPLK/ps5-webkit-autoloader",
+        },
+        {
+            "name": "shsrv",
+            "key": "shsrv",
+            "kind": "local",
+            "file": "shsrv_v0.20.elf",
+            "version": "v0.20",
+            "source": "https://github.com/someone/shsrv",
+        },
+        {
+            "name": "prosperomgr",
+            "key": "prosperomgr",
+            "kind": "local",
+            "file": "ProsperoMgr.elf",
+            "version": "",
+            "source": "",
+        },
+    ]
+    assert pst.repository_holds(items, "WebKit-Autoloader-Installer")
+    assert not pst.repository_holds(items, "shsrv")
+    assert (
+        pst.upload_mode({"status": "ok", "existing": None, "folder_exists": False})
+        == "new"
+    )
+    assert (
+        pst.upload_mode({"status": "ok", "existing": {"slot": "local/shsrv"}})
+        == "replace"
+    )
+    expect_fail(pst.upload_mode, {"status": "error"})
+
+    saved = pst.pm, pst.http
+    sent = []
+
+    def fake_http(url, data=None, headers=None, timeout=30):
+        sent.append((url, data, headers or {}))
+        return b"OK"
+
+    pst.http = fake_http
+    pst.pm = lambda path, **kwargs: {"payloads": [item["path"] for item in items]}
+    expect_fail(pst.pm_items)
+    pst.pm = lambda path, **kwargs: {"items": items}
+    assert pst.load_payload("webkit-autoloader-installer") == items[0]["path"]
+    assert pst.load_payload("shsrv") == items[1]["path"]
+    expect_fail(pst.load_payload, "missing")
+    base = f"http://127.0.0.1:{pst.PM_PORT:d}/loadpayload:"
+    assert [url for url, _, _ in sent] == [
+        base + items[0]["path"],
+        base + items[1]["path"],
+    ]
+    assert all(
+        data == b"" and headers["X-PLDMGR-Request"] == "1" for _, data, headers in sent
+    )
+    pst.pm, pst.http = saved
 
 
 if __name__ == "__main__":
