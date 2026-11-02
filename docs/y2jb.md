@@ -12,28 +12,35 @@ installed; use one per boot.
   13.40 to 13.60; Y2JB's code also accepts 01.000.030, which was used on 13.40 and 13.60. One
   01.000.030 package checked here: `UP4381-PPSA01650_00-YOUTUBESIEA00000`, 101,515,264 bytes,
   sha256 `eaf0ba5c1063586ccbf76a5b7fbdfeaed45991176460baad87222ab6bf06bb80`.
-- From itsPLK/ps5-y2jb-autoloader: `download0.dat` in `/user/download/PPSA01650/`, YouTube's
-  data image that carries the exploit, and `y2jb_update.zip` in `/data/`, which YouTube
-  applies and deletes at its next start.
+- `download0.dat` in `/user/download/PPSA01650/`, YouTube's data image that carries the
+  exploit. pst takes it from notmaj0r/Y2JB's newest release, the `download0-pldmgr.zip` build
+  that starts Payload Manager; it shows no splash and was reported on 2026-11-02 to jailbreak
+  almost at once, where itsPLK's autoloader took 10 to 15 seconds. The release `Relapse`
+  (2026-10-27) zip holds only `download0.dat`, sha256
+  `17399decc65515de1f456102a931edf2943fc5c19d8827572e3cf215a33c36da`. YouTube writes into the
+  image while it runs, so the console's copy stops matching that digest after the first start.
 
 ## pst y2jb
 
-`pst y2jb` sends the newest stable autoloader release's `y2jb_update.zip`, checked against
-GitHub's sha256, to `/data/`. The options, each off unless given:
+`pst y2jb` does what its options say, and refuses to run with none:
 
-- `--install` also sends `download0.dat`, and refuses while a game or app runs, because
+- `--install` downloads the newest release's `download0-pldmgr.zip`, checks it against GitHub's
+  sha256, refuses unless it holds only `download0.dat`, backs up the console's current
+  `download0.dat` to `$PST_STATE/backups/y2jb/<time>/`, then uploads the new one under a
+  temporary name and renames it into place. It refuses while a game or app runs, because
   `download0.dat` is YouTube's mounted data while it runs.
 - `--pkg <YouTube package>`, with `--install`, first installs a missing YouTube: it stages the
   package in `/data/pkg`, checks it is `PPSA01650`, installs it through the Web File Manager,
   waits until `/user/app/PPSA01650/app.pkg` has the package's size, and deletes the staged copy.
   Deleting the YouTube tile on the console deletes `download0.dat` with it, so this sets
   everything up again.
-- `--icon <png>` (or `$PST_STATE/y2jb-icon.png` when it exists): a 512x512 PNG written over the
-  tile's `/user/appmeta/PPSA01650/icon0.png` and swapped into the update zip in place of the
-  autoloader's icon, with its line in `update-info.txt` rewritten; the updater checks only file
-  sizes. The autoloader copies the icon from its installed files onto the tile at every start,
-  so an update sent any other way brings its own icon back.
+- `--icon [png]` puts a 512x512 PNG on the tile's `/user/appmeta/PPSA01650/icon0.png`;
+  without a file it takes `$PST_STATE/y2jb-icon.png`. notmaj0r's build never touches the icon,
+  so it stays until the console rewrites the tile's metadata.
 - `--rename` renames the app to "Y2JB" wherever the console shows its name (below).
+
+The console can rewrite the tile's metadata and put YouTube's own icon and name back; this was
+seen once on 13.40, with no cause found. `pst y2jb --icon --rename` puts both back.
 
 ## Renaming the app
 

@@ -86,7 +86,7 @@ the module yet; see [docs/ps5-linux.md](docs/ps5-linux.md).
 | `pst send <dump> [--fself]` | Uploads a dump to `/data/homebrew/<TITLEID>` through a staging folder, sizes checked; `--fself` then fake-signs it with the App Dumper |
 | `pst fself <TITLEID>` | Fake-signs a game already in `/data/homebrew` |
 | `pst fpkg <dump>... [--plan] [--dir D] [--send [PS4]] [--remove-dump]` | Builds PS4 fake packages from ItemzFlow dumps of base games |
-| `pst y2jb [--install [--pkg PKG]] [--icon PNG] [--rename]` | Sends the newest Y2JB autoloader update, sha256 checked; see [docs/y2jb.md](docs/y2jb.md) |
+| `pst y2jb [--install [--pkg PKG]] [--icon [PNG]] [--rename]` | Installs notmaj0r's newest Y2JB, sha256 checked, puts our icon on its tile, renames it; see [docs/y2jb.md](docs/y2jb.md) |
 | `pst avatar <picture> [--user HEX] [--fill]` | Sets a picture as a user's profile avatar |
 | `pst avatar-pack <pack> <picture or folder>... [--fill]` | Stores pictures as ready avatars in `/data/avatars/<pack>/` |
 | `pst save-list` | Every game save on the console, by title and slot |

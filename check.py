@@ -158,27 +158,24 @@ def main():
             + body
         )
 
-    def update_zip(info):
+    ours = png(512, 512, b"our icon")
+    assert pst.checked_icon(ours) == ours
+    expect_fail(pst.checked_icon, png(256, 256, b""))
+    expect_fail(pst.checked_icon, b"GIF89a" + bytes(30))
+
+    def release_zip(entries):
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as archive:
-            archive.writestr("icon0.png", png(512, 512, b"theirs"))
-            archive.writestr(zipfile.ZipInfo("main.js"), b"abc")
-            archive.writestr("update-info.txt", info)
+            for name, data in entries:
+                archive.writestr(name, data)
         return buffer.getvalue()
 
-    ours = png(512, 512, b"our icon, longer")
-    edited = zipfile.ZipFile(
-        io.BytesIO(pst.with_icon(update_zip("icon0.png|30\r\nmain.js|3\r\n"), ours))
+    assert pst.relapse_download0(release_zip([("download0.dat", b"image")])) == b"image"
+    expect_fail(
+        pst.relapse_download0,
+        release_zip([("download0.dat", b"image"), ("readme.txt", b"x")]),
     )
-    assert edited.read("icon0.png") == ours
-    assert edited.read("main.js") == b"abc"
-    assert (
-        edited.read("update-info.txt")
-        == (f"icon0.png|{len(ours):d}\r\nmain.js|3\r\n").encode()
-    )
-    expect_fail(pst.with_icon, update_zip("icon0.png|30\n"), png(256, 256, b""))
-    expect_fail(pst.with_icon, update_zip("main.js|3\n"), ours)
-    expect_fail(pst.with_icon, update_zip("icon0.png|30\n/icon0.png|30\n"), ours)
+    expect_fail(pst.relapse_download0, release_zip([("y2jb_update.zip", b"x")]))
     saved_env = {
         name: os.environ.pop(name, None)
         for name in ("PST_STATE", "XDG_STATE_HOME", "HOME")

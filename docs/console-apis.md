@@ -14,7 +14,7 @@ in `pst.py` (`PM_PORT`, `DUMPER_PORT`, `GARLIC_PORT`, `FILE_MANAGER_PORT`, `SHSR
 | shsrv | 2323 | none | `pst temps`; `pst temps --stop` ends it |
 | websrv | 8080 | none | the autoload list |
 | ShadowMountPlus | 10101 | none | the autoload list |
-| elfldr (itsPLK build) | 9021 | none | the autoloaders; accepts connections from the console itself only |
+| elfldr | 9021 | none | Y2JB; itsPLK's build accepts connections from the console itself only |
 | GoldHEN FTP (PS4) | 2121 | anonymous | GoldHEN |
 
 ## Payload Manager, port 8084

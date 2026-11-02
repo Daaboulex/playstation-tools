@@ -76,11 +76,11 @@ FPKG_SKIP |= {
     for index in range(31)
 }
 HOMEBREW = "/data/homebrew"
-Y2JB_REPO = "itsPLK/ps5-y2jb-autoloader"
+Y2JB_REPO = "notmaj0r/Y2JB"
+Y2JB_ASSET = "download0-pldmgr.zip"
 Y2JB_TITLE = "PPSA01650"
 Y2JB_STATE_ICON = "y2jb-icon.png"
 Y2JB_ICON_SIZE = (512, 512)
-Y2JB_UPDATE = "/data/y2jb_update.zip"
 Y2JB_DOWNLOAD0 = "/user/download/PPSA01650/download0.dat"
 Y2JB_TILE_ICON = "/user/appmeta/PPSA01650/icon0.png"
 Y2JB_APP_PKG = "/user/app/PPSA01650/app.pkg"
@@ -1388,38 +1388,29 @@ def checked_icon(icon):
     return icon
 
 
-def with_icon(update_zip, icon):
-    checked_icon(icon)
-    source = zipfile.ZipFile(io.BytesIO(update_zip))
+def relapse_download0(archive):
+    source = zipfile.ZipFile(io.BytesIO(archive))
     names = source.namelist()
-    if "icon0.png" not in names or "update-info.txt" not in names:
+    if names != ["download0.dat"]:
+        raise Fail(f"{Y2JB_ASSET} holds {names!r}, not only download0.dat; refusing it")
+    return source.read("download0.dat")
+
+
+def backup_download0():
+    size = ftp_size(Y2JB_DOWNLOAD0)
+    if size is None:
+        return None
+    path = os.path.join(state_dir("backups", "y2jb"), stamp(), "download0.dat")
+    os.makedirs(os.path.dirname(path))
+    with ftp() as connection, open(path, "wb") as target:
+        connection.voidcmd("TYPE I")
+        connection.retrbinary("RETR " + Y2JB_DOWNLOAD0, target.write, blocksize=1 << 20)
+    got = os.path.getsize(path)
+    if got != size:
         raise Fail(
-            "y2jb_update.zip has no icon0.png or update-info.txt; "
-            "its layout changed, refusing to edit it"
+            f"the backup of {Y2JB_DOWNLOAD0} has {got:d} bytes, the console {size:d}; nothing replaced"
         )
-    info = source.read("update-info.txt").decode("ascii")
-    newline = "\r\n" if "\r\n" in info else "\n"
-    lines = info.splitlines()
-    rows = [
-        index
-        for index, line in enumerate(lines)
-        if line.split("|")[0].strip().lstrip("/") == "icon0.png"
-    ]
-    if len(rows) != 1:
-        raise Fail(f"update-info.txt lists icon0.png {len(rows):d} times, not once")
-    lines[rows[0]] = f"icon0.png|{len(icon):d}"
-    edited = newline.join(lines) + (newline if info.endswith(newline) else "")
-    output = io.BytesIO()
-    with zipfile.ZipFile(output, "w") as target:
-        for item in source.infolist():
-            if item.filename == "icon0.png":
-                data = icon
-            elif item.filename == "update-info.txt":
-                data = edited.encode("ascii")
-            else:
-                data = source.read(item)
-            target.writestr(item, data)
-    return output.getvalue()
+    return path
 
 
 def install_task_settled(task):
@@ -1671,6 +1662,8 @@ def rename_y2jb():
 
 
 def cmd_y2jb(args):
+    if not (args.install or args.icon is not None or args.rename):
+        raise Fail("nothing to do; give --install, --icon or --rename")
     if args.install and game_running():
         raise Fail(
             "close every game and app first; download0.dat is "
@@ -1685,29 +1678,30 @@ def cmd_y2jb(args):
                 f"YouTube ({Y2JB_TITLE}) is not installed on the PS5; run: pst y2jb --install --pkg <YouTube package>"
             )
         install_youtube(args.pkg)
-    icon_path = args.icon or state_dir(Y2JB_STATE_ICON)
-    icon = None
-    if args.icon or os.path.isfile(icon_path):
+    if args.install:
+        releases = http_json(GITHUB_API + Y2JB_REPO + "/releases?per_page=20")
+        release = newest_release(
+            Y2JB_REPO,
+            [release for release in releases if not release.get("prerelease")],
+        )
+        download0 = relapse_download0(
+            verified_download(release_asset(release, Y2JB_ASSET))
+        )
+        backup = backup_download0()
+        if backup:
+            print("backed up the previous download0.dat to " + backup)
+        ftp_replace(Y2JB_DOWNLOAD0, download0)
+        print(
+            f"installed {Y2JB_REPO} {release['tag_name']} ({Y2JB_ASSET}, sha256 verified) to {Y2JB_DOWNLOAD0}"
+        )
+    if args.icon is not None:
+        icon_path = args.icon or state_dir(Y2JB_STATE_ICON)
+        if not os.path.isfile(icon_path):
+            raise Fail(f"no icon at {icon_path}; give one with --icon <png>")
         with open(icon_path, "rb") as source:
             icon = checked_icon(source.read())
-        ftp_put(Y2JB_TILE_ICON, icon)
+        ftp_replace(Y2JB_TILE_ICON, icon)
         print(f"put {icon_path} on the YouTube tile ({Y2JB_TILE_ICON})")
-    releases = http_json(GITHUB_API + Y2JB_REPO + "/releases?per_page=20")
-    release = newest_release(
-        Y2JB_REPO, [release for release in releases if not release.get("prerelease")]
-    )
-    update = verified_download(release_asset(release, "y2jb_update.zip"))
-    if icon:
-        update = with_icon(update, icon)
-    if args.install:
-        ftp_put(
-            Y2JB_DOWNLOAD0, verified_download(release_asset(release, "download0.dat"))
-        )
-        print("sent download0.dat to " + Y2JB_DOWNLOAD0)
-    ftp_put(Y2JB_UPDATE, update)
-    print(
-        f"sent {release['tag_name']} y2jb_update.zip{(' with ' + icon_path if icon else '')} to {Y2JB_UPDATE} (sha256 verified, sizes checked); it applies the next time YouTube starts"
-    )
     if args.rename:
         rename_y2jb()
 
@@ -2969,11 +2963,11 @@ def main(argv):
     )
     update.add_argument("name")
     y2jb = commands.add_parser(
-        "y2jb", help="send the newest Y2JB autoloader update with our icon"
+        "y2jb", help="install notmaj0r's Y2JB, put our icon on its tile, rename it"
     )
     y2jb.add_argument("--install", action="store_true")
     y2jb.add_argument("--pkg", metavar="YOUTUBE_PKG")
-    y2jb.add_argument("--icon", metavar="PNG")
+    y2jb.add_argument("--icon", metavar="PNG", nargs="?", const="")
     y2jb.add_argument("--rename", action="store_true")
     avatar = commands.add_parser(
         "avatar", help="set a picture as a user's profile avatar"
