@@ -20,6 +20,9 @@ other one, after checking GitHub's sha256.
 | Garlic SaveMgr | no, started by the `save-` commands | decrypting and re-encrypting saves; web UI and API on 8082 |
 | klogsrv | no | system log on 3232 for diagnosing crashes |
 | shsrv | no, `pst temps` | a root shell on 2323, read only for its banner |
+| ps5-date-time-sync | yes | setting the system clock, which drifts with PSN blocked |
+| WelcomeHubActivator | no | showing the Welcome Hub; on 13.40 the hub can be gone after a reboot until this runs again |
+| ProsperoMgr | no | a dashboard on 7070; its Accounts page gives the fake sign-in the Welcome Hub needs |
 
 etaHEN and kstuff must not run for a PS5 Linux boot (see [ps5-linux.md](ps5-linux.md)).
 
