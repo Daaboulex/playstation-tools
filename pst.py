@@ -817,7 +817,7 @@ def cmd_casecheck(args):
         print(f"  {wanted}  (dump has {actual})")
     print(
         "internal PS5 storage is case-sensitive: run it from exFAT USB "
-        "or an exFAT image (see README)"
+        "or an exFAT image (see docs/game-folders.md)"
     )
 
 
