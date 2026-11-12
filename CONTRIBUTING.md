@@ -1,16 +1,15 @@
 # Contributing to playstation-tools
 
 [`pst.py`](pst.py) is a single-file Python tool for jailbroken PS4 and PS5 consoles;
-[`check.py`](check.py) is its check. The README says what each command does and which
-environment variables configure it; [`docs/`](docs/) holds the console knowledge each command
-rests on.
+[`check.py`](check.py) is its check. The README says which environment variables configure it,
+[`docs/COMMANDS.md`](docs/COMMANDS.md) says what each command does, and the rest of
+[`docs/`](docs/) holds the console knowledge each command rests on.
 
 ## Rules
 
 - Run `nix flake check --no-eval-cache` before every commit and read its exit code; commit only
   when it is green. No force flags.
-- No comments in any file, except the README's `generated:` markers the packaging standard
-  requires. ASCII only.
+- No comments in any file. ASCII only.
 - No per-owner value in a tracked file: no console or LAN address, console user or account
   id, user name, token, real save, console database, game library, or Sony, YouTube or game
   artwork, and no packages. These come from `PST_PS5`, `PST_PS4`, `PST_STATE`,
@@ -59,9 +58,10 @@ Run a command that writes a console only when that exact run was asked for;
 ## Adding a command
 
 Keep the pure part (parsing, planning, building bytes) apart from the transport, so the check
-can run it without a console. Add a check that fails without the change, a row in the README's
-command table, and a row in [`docs/console-apis.md`](docs/console-apis.md) for any new
-endpoint. New state goes under `state_dir()`.
+can run it without a console. Add a check that fails without the change, a row in
+[`docs/COMMANDS.md`](docs/COMMANDS.md), the command's name in the README's table of commands, and
+a row in [`docs/console-apis.md`](docs/console-apis.md) for any new endpoint. New state goes
+under `state_dir()`.
 
 ## Where things live
 
