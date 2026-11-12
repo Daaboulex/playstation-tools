@@ -176,19 +176,37 @@ of kstuff-lite, then warm reboots by kexec while Linux runs.
 - Gaming: Digital Foundry measured Steam through Proton near native PS5 performance in one
   favourable case at 1080p, on old firmware.
 
-## NixOS: the plan
+## NixOS: what is built and what is not
 
 The PS5 is simpler than the PS4 Linux ports in three places: a mainline kernel, stock mesa, and
 an initrd the loader takes as it is.
 
-1. **Kernel**: done as this repository's NixOS module (`module.nix`, options in the README).
-   It takes `linux.patch` and `firmware/` from upstream's main branch as a flake input; reading
-   that input's `.config` for the target version is not import-from-derivation, because flake
-   inputs are fetched before evaluation. The config is nixpkgs' kernel config plus the PS5
-   options, the way nixpkgs and nixos-apple-silicon build device kernels, not the project's
-   `.config`. The project builds its own kernel with GCC 15.2, no LTO, generic x86-64, and
-   `IOMMU_DEFAULT_PASSTHROUGH`; `IKCONFIG` is off there and on in nixpkgs' config. Measured on
-   2026-10-26 with `patch --dry-run` (newest patches tag that day: `kernel-7.2.3-1ec6a4a`):
+The kernel step is built, as this repository's NixOS module ([`module.nix`](../module.nix),
+options in the [README](../README.md)):
+
+- **The patch**: `linux.patch` is one entry on `boot.kernelPatches`, taken with `firmware/`
+  from upstream's main branch as a flake input. NixOS's `boot.kernelPatches` reaches any
+  `boot.kernelPackages`, the CachyOS builder included, so the PS5 patch and its config are one
+  list entry whatever kernel the host picks.
+- **The PS5 options**: `X86_EXTENDED_PLATFORM`, `X86_PS5`, `AHCI_SALINA`, `MTS`,
+  `IOMMU_DEFAULT_PASSTHROUGH` and the built-in `amdgpu/ps5_vcn.bin`, in that entry's
+  `structuredExtraConfig`. The config is nixpkgs' kernel config plus the PS5 options, the way
+  nixpkgs and nixos-apple-silicon build device kernels, not the project's `.config`. The project
+  builds its own kernel with GCC 15.2, no LTO, generic x86-64, and `IOMMU_DEFAULT_PASSTHROUGH`;
+  `IKCONFIG` is off there and on in nixpkgs' config.
+- **The default kernel**: the kernel.org release the patch set's `.config` names
+  ([`kernel.nix`](../kernel.nix), with the tarball hash from [`kernel.json`](../kernel.json)),
+  unless the configuration sets `boot.kernelPackages` itself. Reading that input's `.config`
+  for the target version is not import-from-derivation, because flake inputs are fetched before
+  evaluation.
+- **The config guard**: every system build reads the generated kernel config and fails if one of
+  the PS5 options is missing.
+
+Nothing else is built. What each missing step would be:
+
+1. **The patch set on a newer kernel**: nothing here rebases `linux.patch`, so a kernel other
+   than the default builds only once the patch applies to its source. Measured on 2026-10-26
+   with `patch --dry-run` (newest patches tag that day: `kernel-7.2.3-1ec6a4a`):
    - nixpkgs' 7.2.12: two hunks fail even with fuzz, `btusb.c` (new upstream flags next to the
      patch's) and one in `amdgpu_dm.c` (display init moved), a small rebase.
    - vanilla 7.3: 16 hunks fail in 8 files, 8 of them in `amdgpu_dm.c`, a real rebase of the
@@ -199,24 +217,21 @@ an initrd the loader takes as it is.
      own changes add no conflict; the failures are the 7.2 to 7.3 drift. The BORE scheduler
      patch shares no file with `linux.patch`.
    - CachyOS's `config` has `X86_EXTENDED_PLATFORM` off, which `X86_PS5` depends on, and lacks
-     `AHCI_SALINA`, `MTS` and the built-in `ps5_vcn.bin`; those go in the patch's
-     `structuredExtraConfig`. Its builder sets `ignoreConfigErrors`, so a check must assert
-     `CONFIG_X86_PS5=y` in the built kernel's config, or a dropped option goes unnoticed.
+     `AHCI_SALINA`, `MTS` and the built-in `ps5_vcn.bin`; the module's `structuredExtraConfig`
+     sets them. Its builder sets `ignoreConfigErrors`, so without the config guard, which
+     requires `CONFIG_X86_PS5=y` in the generated config, a dropped option would go unnoticed.
 
-   NixOS's `boot.kernelPatches` reaches any `boot.kernelPackages`, the CachyOS builder
-   included, so the PS5 patch and its config are one list entry whatever kernel the host
-   picks. So: first the exact 7.2.3 pair, then 7.2.12 with the two hunks rebased, and CachyOS
-   LTO at `x86-64-v3` (the PS5's Zen 2 has AVX2 and no AVX-512; never `native` or `zen4` when
-   ryzen builds it) once a patch applies to its source: upstream's 7.3 tag or our own rebase of
-   the 15 hunks.
-2. **Firmware**: `ps5_vcn.bin` stays built in; `hardware.firmware` with linux-firmware for the
-   rest, and anything a built-in driver requests at probe goes in the initramfs, because a
-   built-in driver probes before the root filesystem is mounted.
+   A CachyOS kernel for the PS5 would be the LTO build at `x86-64-v3`, never `native` or
+   `zen4`: the PS5's Zen 2 has AVX2 and no AVX-512. It needs a patch that applies to its
+   source: upstream's 7.3 tag or a rebase of the 15 hunks.
+2. **Other firmware**: `ps5_vcn.bin` is built in; the rest would be `hardware.firmware` with
+   linux-firmware, and anything a built-in driver requests at probe goes in the initramfs,
+   because a built-in driver probes before the root filesystem is mounted.
 3. **Boot files**: the FAT32 partition mounted at `/boot/efi`, and `boot.loader.external` with
    an `installHook` that copies the generation's kernel as `bzImage`, its initrd as `initrd.img`
    and a `cmdline.txt` ending in `init=<toplevel>/init` onto it. Then `nixos-rebuild switch`
    updates the next boot, and a kexec warm reboot starts it without the exploit.
-4. **Root**: ext4 by label, on the USB drive first, the M.2 later.
+4. **Root**: ext4 by label, on the USB drive or the M.2.
 5. **Services**: fan and boost as NixOS services built from `ps5-linux-tools`, the IW620 Wi-Fi
    driver as an out-of-tree module, DualSense through internal Bluetooth or a dongle.
 6. **The Steam console session**: the project's CachyOS image (source,

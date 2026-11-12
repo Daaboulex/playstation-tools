@@ -67,7 +67,7 @@ patch set on that kernel instead; it builds once the patch set applies to that k
 
 Every system build reads the generated kernel config and fails if one of those options is
 missing. The patch set follows upstream's main branch: the scheduled lock refresh moves it,
-`nix run .#after-lock-update` writes the hash of the release it targets into `kernel.json`, and CI generates
+`nix run .#after-lock-update` writes the hash of the release it targets into [`kernel.json`](kernel.json), and CI generates
 that kernel's config before the refresh lands. Boot files, fan and boost, and Wi-Fi are not in
 the module yet; see [docs/ps5-linux.md](docs/ps5-linux.md).
 
@@ -78,7 +78,7 @@ the module yet; see [docs/ps5-linux.md](docs/ps5-linux.md).
 | `pst status` | Running payloads, autoload list, installed payloads, games, storage |
 | `pst payloads` | Each installed payload against its developer's newest GitHub release |
 | `pst payload-update <name>` | Installs the developer's newest release after checking GitHub's sha256; Payload Manager updates its own repository's payloads |
-| `pst snapshot` | Records console state and developer versions to `$PST_STATE/inventory/<date>.json` |
+| `pst snapshot [--dir D]` | Records console state and developer versions to `$PST_STATE/inventory/<date>.json`, or to `D/<date>.json` |
 | `pst dumper` | Starts the App Dumper |
 | `pst temps [--watch N] [--count N] [--stop]` | SoC and CPU temperature and CPU clock from shsrv's banner; `--stop` ends shsrv |
 | `pst prep <dump>` | Writes `sce_sys/param.json` for a PS4 dump from its `param.sfo` |
@@ -114,13 +114,15 @@ name and rename into place, and refuse when the state is not what they expect.
 
 ## Check
 
-`nix flake check --no-eval-cache` runs `check.py` (no console, no network), `pst fpkg` on a
-synthetic dump that only the patched `pkgtool` can package, and on x86_64-linux the packaging
-standard's lint. The dev shell installs the same lint as a pre-commit hook.
+`nix flake check --no-eval-cache` runs [`check.py`](check.py) (no console, no network),
+`pst fpkg` on a synthetic dump that only the patched `pkgtool` can package, and on x86_64-linux
+the packaging standard's lint, ruff included. On aarch64-linux the check does not run the lint.
+The dev shell installs the same lint as a pre-commit hook, which is what runs it there.
 
 <!-- BEGIN generated:footer -->
 ## License
 
-MIT, see [LICENSE](LICENSE). `patches/liborbispkg-chunk-sha-size.patch` changes LibOrbisPkg and
-is LGPL-3.0-or-later like LibOrbisPkg itself.
+MIT, see [LICENSE](LICENSE).
+[`patches/liborbispkg-chunk-sha-size.patch`](patches/liborbispkg-chunk-sha-size.patch) changes
+LibOrbisPkg and is LGPL-3.0-or-later like LibOrbisPkg itself.
 <!-- END generated:footer -->

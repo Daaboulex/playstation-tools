@@ -2,9 +2,10 @@
 
 Derived 2026-10-09 from the bytes of six saves: PS4 SWAP Force slot (CUSA00024-SAVEDATA01) and
 profile (SAVEDATA04), Wii U SWAP Force SWAPFORCE_1.sav and SWAPFORCE_OPTIONS.sav, Wii U
-Imaginators IMAGINATORS_3.sav and IMAGINATORS_OPTIONS.sav. `igb_parse` in `pst.py` is the
+Imaginators IMAGINATORS_3.sav and IMAGINATORS_OPTIONS.sav. `igb_parse` in [`pst.py`](../pst.py) is the
 executable form of this document: it refuses any file that breaks a rule marked PROVEN here, and
-`pst save-convert` uses it. `check.py` round-trips `fixtures/swapforce-global-ps4.igb` (the PS4
+`pst save-convert` uses it. [`check.py`](../check.py) round-trips
+[`fixtures/swapforce-global-ps4.igb`](../fixtures/swapforce-global-ps4.igb) (the PS4
 profile save, trimmed to its data, with the owner id at 0x98 zeroed and every progress block
 zero) through both byte orders.
 

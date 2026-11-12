@@ -28,7 +28,7 @@ etaHEN and kstuff must not run for a PS5 Linux boot (see [ps5-linux.md](ps5-linu
 
 ## DNS
 
-`dns/nanodns.ini` is a config for the nanoDNS payload, put on the console at
+[`dns/nanodns.ini`](../dns/nanodns.ini) is a config for the nanoDNS payload, put on the console at
 `/data/nanodns/nanodns.ini`. It forwards to AdGuard DNS (ad blocking) with Quad9 as the last
 fallback, as plain DNS, and answers PlayStation Network domains with 0.0.0.0, keeping drakmor's
 default exceptions. nanoDNS listens on 127.0.0.1; with the PS5's network DNS set to 127.0.0.1

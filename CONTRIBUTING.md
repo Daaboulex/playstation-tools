@@ -1,8 +1,9 @@
 # Contributing to playstation-tools
 
-`pst.py` is a single-file Python tool for jailbroken PS4 and PS5 consoles; `check.py` is its
-check. The README says what each command does and which environment variables configure it;
-`docs/` holds the console knowledge each command rests on.
+[`pst.py`](pst.py) is a single-file Python tool for jailbroken PS4 and PS5 consoles;
+[`check.py`](check.py) is its check. The README says what each command does and which
+environment variables configure it; [`docs/`](docs/) holds the console knowledge each command
+rests on.
 
 ## Rules
 
@@ -17,12 +18,13 @@ check. The README says what each command does and which environment variables co
 - Fail closed: on ambiguity (no row or more than one, an unknown save type, an unknown flag set)
   raise `Fail` with a message saying what was found. Never swallow an error; every failure
   reaches the user as one `pst: ...` line.
-- `check.py` never touches a console or the network: stub the transport, as `FakeFtp` does.
+- [`check.py`](check.py) never touches a console or the network: stub the transport, as
+  `FakeFtp` does.
 - The repository follows github:Daaboulex/nix-packaging-standard: its lint (ruff, nixfmt, typos,
-  rumdl and more) runs in the pre-commit hook. `nix flake check` and `nix fmt` do not run ruff:
-  on 2026-11-02 unformatted Python passed both and the hook reformatted it at commit. The
-  synced files (`.envrc`, `.editorconfig`, `.github/workflows/`) are copied from the standard,
-  never edited here.
+  rumdl and more) runs in the pre-commit hook. `nix flake check` runs the same lint, ruff
+  included, on x86_64-linux and not on aarch64-linux, where the hook is what runs it. `nix fmt`
+  does not run ruff. The synced files ([`.envrc`](.envrc), [`.editorconfig`](.editorconfig),
+  [`.github/workflows/`](.github/workflows/)) are copied from the standard, never edited here.
 - Commits: `type(scope): summary`, 72 characters at most, lowercase after the prefix, a body
   that says why and what was discarded, a `Test:` line naming what ran, and a `Cause:` line on
   a fix. One logical change per commit. Scopes: pst, check, module, flake, readme, docs, overlays.
@@ -32,13 +34,13 @@ check. The README says what each command does and which environment variables co
 | Class | Commands |
 |---|---|
 | Offline | prep, casecheck, fpkg without --send, save-inspect, save-convert, save-checksum, itt-merge |
-| Reads a console | status, payloads, snapshot, save-list |
-| Starts a payload | dumper, temps (shsrv), the save commands (Garlic), y2jb --pkg (the Web File Manager) |
+| Reads a console | status, payloads, snapshot, save-list, save-pull |
+| Starts a payload | dumper, temps (shsrv), save-list, save-pull, save-push (Garlic), y2jb --pkg (the Web File Manager) |
 | Writes a console | payload-update, y2jb, avatar, avatar-pack, send, fself, save-push, fpkg --send |
 | Deletes local data | fpkg --remove-dump |
 
-Run a command that writes a console only when that exact run was asked for; `check.py` never
-runs one.
+Run a command that writes a console only when that exact run was asked for;
+[`check.py`](check.py) never runs one.
 
 ## Console safety
 
@@ -58,21 +60,24 @@ runs one.
 
 Keep the pure part (parsing, planning, building bytes) apart from the transport, so the check
 can run it without a console. Add a check that fails without the change, a row in the README's
-command table, and a row in `docs/console-apis.md` for any new endpoint. New state goes under
-`state_dir()`.
+command table, and a row in [`docs/console-apis.md`](docs/console-apis.md) for any new
+endpoint. New state goes under `state_dir()`.
 
 ## Where things live
 
-- `pst.py`, in sections: environment and state, transport, console services, GitHub releases,
-  status and payloads, game folders, PS4 fPKG, Y2JB, avatars, console saves, save formats, CLI.
-- `check.py` and `fixtures/` (synthetic or scrubbed files only); `fixtures/playgo-trigger.nix`
-  is the pkgtool patch's heal test.
-- `module.nix` is the NixOS module for Linux on the PS5; `kernel.nix` builds the kernel.org
-  release the patch set's `.config` names, with the tarball hash from `kernel.json`, which
-  `nix run .#after-lock-update` (`scripts/sync-kernel-pin.sh`) writes.
-- `package.nix` builds `pst`; `overlay.nix` adds it to nixpkgs; `overlays/` holds temporary
-  fixes to nixpkgs packages in the standard's shape (a reason, a date, and the build that shows
-  the fix is no longer needed); `patches/` holds the patch files they apply.
-- `docs/`: console facts and formats, each with how and when it was established.
-- `dns/`: a file that goes onto the console as it is.
+- [`pst.py`](pst.py), in sections: environment and state, transport, console services, GitHub
+  releases, status and payloads, game folders, PS4 fPKG, Y2JB, avatars, console saves, save
+  formats, CLI.
+- [`check.py`](check.py) and [`fixtures/`](fixtures/) (synthetic or scrubbed files only);
+  [`fixtures/playgo-trigger.nix`](fixtures/playgo-trigger.nix) is the pkgtool patch's heal test.
+- [`module.nix`](module.nix) is the NixOS module for Linux on the PS5;
+  [`kernel.nix`](kernel.nix) builds the kernel.org release the patch set's `.config` names, with
+  the tarball hash from [`kernel.json`](kernel.json), which `nix run .#after-lock-update`
+  ([`scripts/sync-kernel-pin.sh`](scripts/sync-kernel-pin.sh)) writes.
+- [`package.nix`](package.nix) builds `pst`; [`overlay.nix`](overlay.nix) adds it to nixpkgs;
+  [`overlays/`](overlays/) holds temporary fixes to nixpkgs packages in the standard's shape (a
+  reason, a date, and the build that shows the fix is no longer needed); [`patches/`](patches/)
+  holds the patch files they apply.
+- [`docs/`](docs/): console facts and formats, each with how and when it was established.
+- [`dns/`](dns/): a file that goes onto the console as it is.
 - Console state, saves and backups live in `PST_STATE`, never in the repository.

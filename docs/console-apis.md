@@ -1,7 +1,7 @@
 # Console services, ports and endpoints
 
 What `pst` talks to on a jailbroken PS5, so a new command starts from here. The port numbers
-in `pst.py` (`PM_PORT`, `DUMPER_PORT`, `GARLIC_PORT`, `FILE_MANAGER_PORT`, `SHSRV_PORT`,
+in [`pst.py`](../pst.py) (`PM_PORT`, `DUMPER_PORT`, `GARLIC_PORT`, `FILE_MANAGER_PORT`, `SHSRV_PORT`,
 `FTP_PORT`) are the code's source; this table follows them.
 
 | Service | Port | Login | Started by |

@@ -34,9 +34,9 @@ step succeeded.
    stops the build.
 
    `fake_self` reproduces `make_fself.py`, which flatz published without a licence; it was
-   written against that script's published copies and `check.py` pins its output to the script's
-   byte for byte. It reads only the program headers, as the script does: a decrypted game
-   executable often names a section-header table that is not in the file. Measured on 2026-10-26,
+   written against that script's published copies and [`check.py`](../check.py) pins its output
+   to the script's byte for byte. It reads only the program headers, as the script does: a
+   decrypted game executable often names a section-header table that is not in the file. Measured on 2026-10-26,
    two other signers do not fit dumps: OpenOrbis `create-fself` rewrites its input into an OELF
    first and its library refuses ELFs without that data, and `make_fself_rust` (MIT) stops on a
    section-header offset past the end of the file and, after a fix for a missing 16-byte
@@ -51,15 +51,19 @@ zero passcode when the dump has none. An update (`-patch` folder) is not merged.
 
 ## The pkgtool patch
 
-The flake's pkgtool carries `patches/liborbispkg-chunk-sha-size.patch`, applied by
-`overlays/liborbispkg-playgo-chunk-sha.nix`. Unpatched, `pkg_build` sizes the PlayGo chunk hash
+The flake's pkgtool carries
+[`patches/liborbispkg-chunk-sha-size.patch`](../patches/liborbispkg-chunk-sha-size.patch),
+applied by
+[`overlays/liborbispkg-playgo-chunk-sha.nix`](../overlays/liborbispkg-playgo-chunk-sha.nix).
+Unpatched, `pkg_build` sizes the PlayGo chunk hash
 table before counting the entry table and the hash table itself into the 512 KiB body alignment,
 so a package whose body ends just past a boundary fails with "Playgo Chunk hash file was not
 allocated enough space" (LibOrbisPkg issues #64 and #88; a 39 GB game hit it on 2026-10-11). The
 patch sizes the table by iterating until it stops growing.
 
-`fixtures/playgo-trigger.nix` runs `pst fpkg` on a synthetic dump (the param.sfo in
-`fixtures/playgo-trigger/`, a 64 KiB `eboot.bin` and a `pic1.png` of 0x7A500 bytes, both zeros).
+[`fixtures/playgo-trigger.nix`](../fixtures/playgo-trigger.nix) runs `pst fpkg` on a synthetic
+dump (the param.sfo in [`fixtures/playgo-trigger/`](../fixtures/playgo-trigger/), a 64 KiB
+`eboot.bin` and a `pic1.png` of 0x7A500 bytes, both zeros).
 Measured on 2026-10-26 with pkgtool 0.3-unstable-2025-11-13, every `pic1.png` from 0x7A400 to
 0x7A600 bytes fails unpatched and builds patched; 0x7A500 is the middle. The flake check builds it
 with the patched pkgtool. The packaging standard's scheduled heal builds it with the stock nixpkgs
