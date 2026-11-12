@@ -13,5 +13,4 @@ release the patch set targets; a configuration that sets
 set on that kernel instead, which builds once the patch set applies to it
 .
 
-- Type: boolean
-- Default: `false`
+Type: `boolean`. Default: `false`.
